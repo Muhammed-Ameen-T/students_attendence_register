@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Management</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        body {
+            background-color: #f4f6f9;
+        }
+        .container {
+            max-width: 600px;
+        }
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        .student-list {
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        .student-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background-color: white;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .student-item:hover {
+            background-color: #f1f3f5;
+        }
+        .btn-edit {
+            background-color: #28a745;
+            color: white;
+            margin-right: 8px;
+        }
+        .form-check-input:checked {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <h1 class="text-center mb-4">Student Attendance System</h1>
+        
+        <!-- Student Management -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Student Management</h5>
+                <span class="badge bg-light text-dark" id="studentCount">0/15</span>
+            </div>
+            <div class="card-body">
+                <form id="studentForm" class="mb-3">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="studentName" placeholder="Enter student name" required>
+                        <button type="submit" class="btn btn-primary">Add Student</button>
+                    </div>
+                </form>
+                <div class="student-list" id="studentList">
+                    <!-- Students will be listed here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Take Attendance</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <select class="form-select" id="attendanceType">
+                        <option value="AUDIO TASK">Audio Task</option>
+                        <option value="Attendence Report BCK211 A">Session</option>
+                    </select>
+                </div>
+                <!-- New Date Selection -->
+                <div class="mb-3">
+                    <label class="form-label">Select Date</label>
+                    <div class="d-flex">
+                        <input type="date" class="form-control me-2" id="attendanceDate">
+                        <button class="btn btn-secondary" onclick="setYesterdayDate()">Yesterday</button>
+                    </div>
+                </div>
+                <!-- Custom Heading Input -->
+                <div class="mb-3 custom-heading-input">
+                    <label class="form-label">Custom Heading (Optional)</label>
+                    <input type="text" class="form-control" id="customHeading" placeholder="Enter custom heading">
+                </div>
+                <div class="attendance-list" id="attendanceList">
+                    <!-- Attendance checkboxes will be here -->
+                </div>
+                <button class="btn btn-success mt-3" onclick="submitAttendance()">Submit Attendance</button>
+            </div>
+        </div>
+
+        <!-- Absentee Report -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Absentee Report</h5>
+            </div>
+            <div class="card-body">
+                <div class="attendance-record" id="absenteeRecord"></div>
+                <button class="btn btn-primary" onclick="shareToWhatsApp()">Share to WhatsApp<i class="fa-brands fa-whatsapp" style="margin-left: 0.3rem;font-size: larger;"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Student Modal -->
+    <div class="modal fade" id="editStudentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Student Name</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" class="form-control" id="editStudentInput">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEditedStudent()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize students from cookies or create empty array
+        let students = JSON.parse(getCookie('students') || '[]');
+        let editingStudentIndex = null;
+        
+        // Cookie management
+        function setCookie(name, value, days = 30) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/`;
+        }
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        // Student management
+        document.getElementById('studentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('studentName');
+            const name = nameInput.value.trim();
+            
+            if (name && students.length < 15 && !students.includes(name)) {
+                students.push(name);
+                setCookie('students', JSON.stringify(students));
+                nameInput.value = '';
+                updateStudentList();
+                updateAttendanceList();
+            } else if (students.length >= 15) {
+                alert('Maximum 15 students allowed!');
+            } else if (students.includes(name)) {
+                alert('Student already exists!');
+            }
+        });
+
+        function updateStudentList() {
+            const list = document.getElementById('studentList');
+            const countSpan = document.getElementById('studentCount');
+            
+            list.innerHTML = students.map((student, index) => `
+                <div class="student-item">
+                    <span>${student}</span>
+                    <div>
+                        <button class="btn btn-sm btn-edit" onclick="editStudent(${index})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="removeStudent('${student}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            countSpan.textContent = `${students.length}/15`;
+        }
+
+        function editStudent(index) {
+            editingStudentIndex = index;
+            const editInput = document.getElementById('editStudentInput');
+            editInput.value = students[index];
+            const editModal = new bootstrap.Modal(document.getElementById('editStudentModal'));
+            editModal.show();
+        }
+
+        function saveEditedStudent() {
+            const editInput = document.getElementById('editStudentInput');
+            const newName = editInput.value.trim();
+            
+            if (newName && !students.includes(newName)) {
+                students[editingStudentIndex] = newName;
+                setCookie('students', JSON.stringify(students));
+                updateStudentList();
+                updateAttendanceList();
+                
+                const editModal = bootstrap.Modal.getInstance(document.getElementById('editStudentModal'));
+                editModal.hide();
+            } else if (students.includes(newName)) {
+                alert('Student name already exists!');
+            }
+        }
+
+        function removeStudent(name) {
+            students = students.filter(student => student !== name);
+            setCookie('students', JSON.stringify(students));
+            updateStudentList();
+            updateAttendanceList();
+        }
+
+        // Attendance management
+        function updateAttendanceList() {
+            const list = document.getElementById('attendanceList');
+            list.innerHTML = students.map(student => `
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="attend-${student}" checked>
+                    <label class="form-check-label" for="attend-${student}">${student}</label>
+                </div>
+            `).join('');
+        }
+
+        function setYesterdayDate() {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            document.getElementById('attendanceDate').valueAsDate = yesterday;
+        }
+
+        // Modify existing functions to incorporate new features
+        function formatDate(date) {
+            const d = new Date(date);
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+
+        function submitAttendance() {
+            const type = document.getElementById('attendanceType').value;
+            const absentees = students.filter(student => 
+                !document.getElementById(`attend-${student}`).checked
+            );
+
+            // Get date from date input or use current date
+            const dateInput = document.getElementById('attendanceDate');
+            const selectedDate = dateInput.value ? new Date(dateInput.value) : new Date();
+
+            // Get custom heading or use default
+            const customHeading = document.getElementById('customHeading').value.trim() || 
+                (type === 'AUDIO TASK' ? 'AUDIO TASK ABSENTEES' : 'Attendence Report BCK211 A');
+
+            const record = {
+                type,
+                date: formatDate(selectedDate),
+                absentees,
+                heading: customHeading
+            };
+
+            // Store in cookie
+            const records = JSON.parse(getCookie('attendance_records') || '[]');
+            records.push(record);
+            setCookie('attendance_records', JSON.stringify(records));
+
+            updateAbsenteeRecord(record);
+        }
+
+        function updateAbsenteeRecord(record) {
+            const recordDiv = document.getElementById('absenteeRecord');
+            recordDiv.innerHTML = `
+                <h6>${record.heading}</h6>
+                <p>${record.date}</p>
+                ${record.absentees.length ? 
+                    record.absentees.join('\n') : 
+                    '<p>No absentees!</p>'
+                }
+            `;
+        }
+
+        function shareToWhatsApp() {
+            const records = JSON.parse(getCookie('attendance_records') || '[]');
+            if (records.length === 0) return;
+
+            const lastRecord = records[records.length - 1];
+            const message = `${lastRecord.heading}
+${lastRecord.date}${lastRecord.absentees.length ? '\nAbsentees\n' + lastRecord.absentees.join('\n') : ''}`;
+
+            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        // Set default date on page load
+        document.getElementById('attendanceDate').valueAsDate = new Date();
+        
+        // Initial setup
+        updateStudentList();
+        updateAttendanceList();
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
