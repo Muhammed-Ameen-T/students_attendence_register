@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Report Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4bb543;
+            --background-color: #f8f9fa;
+            --card-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            --transition-speed: 0.3s;
+        }
+
+        body {
+            background-color: var(--background-color);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #2d3748;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 25px 25px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .header h1 {
+            font-weight: 700;
+            font-size: 2rem;
+            margin: 0;
+            text-align: center;
+        }
+
+        .report-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-control {
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            transition: all var(--transition-speed);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+        }
+
+        .input-group {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .input-group-text {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all var(--transition-speed);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            border: none;
+        }
+
+        .btn-success:hover {
+            background-color: #429a3a;
+            transform: translateY(-2px);
+        }
+
+        .report-preview {
+            white-space: pre-wrap;
+            background-color: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 15px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            border: 1px solid #e2e8f0;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .form-floating {
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .report-container {
+                margin: 10px;
+                padding: 1.5rem;
+            }
+            
+            .header {
+                border-radius: 0 0 15px 15px;
+            }
+        }
+
+        /* Animation for buttons */
+        .btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:active::after {
+            width: 200px;
+            height: 200px;
+        }
+        .header .btn-light {
+            background-color: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all var(--transition-speed);
+            color: var(--primary-color);
+        }
+
+        .header .btn-light:hover {
+            background-color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="d-flex text-center justify-content-between align-items-center container">
+            <h1><i class="fas fa-file-alt me-2"></i>Session Report Generator</h1>
+            <button class="btn btn-light" style="width: 12rem;" onclick="window.location.href='index.html'">
+                <i class="fas fa-user-check me-2"></i>Attendance
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="report-container">
+            <form id="reportForm">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="fas fa-users me-2"></i>Batch
+                        </label>
+                        <input type="text" class="form-control" id="batch" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="fas fa-calendar-alt me-2"></i>Date
+                        </label>
+                        <input type="date" class="form-control" id="date" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="fas fa-clock me-2"></i>Time
+                        </label>
+                        <div class="input-group">
+                            <input type="time" class="form-control" id="startTime" required>
+                            <span class="input-group-text">to</span>
+                            <input type="time" class="form-control" id="endTime" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="fas fa-chalkboard-teacher me-2"></i>Trainer
+                        </label>
+                        <input type="text" class="form-control" id="trainer" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="fas fa-user-friends me-2"></i>Coordinators
+                        </label>
+                        <input type="text" class="form-control" id="coordinators" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="fas fa-user-tie me-2"></i>Conducted By
+                        </label>
+                        <input type="text" class="form-control" id="conductedBy" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">
+                            <i class="fas fa-tasks me-2"></i>Session Topic/Activities
+                        </label>
+                        <textarea class="form-control" id="sessionTopic" rows="3" required 
+                            placeholder="Describe the topic and activities (e.g., English Speaking, Role Play, Group Discussion)"></textarea>
+                    </div>
+                </div>
+                <div class="text-center mt-4">
+                    <button type="button" class="btn btn-primary me-2" onclick="generateReport()">
+                        <i class="fas fa-magic me-2"></i>Generate Report
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="shareOnWhatsApp()">
+                        <i class="fab fa-whatsapp me-2"></i>Share to WhatsApp
+                    </button>
+                </div>
+            </form>
+
+            <div class="card mt-4">
+                <p>Preview:</p>
+                <div class="card-body report-preview" id="reportPreview"></div>
+            </div>
+            
+        </div>
+        <div class="text-center mt-4">
+            <p>Developed With ❤️ By Ameen <a href="https://www.linkedin.com/in/muhammed-ameen-t"><i class="fa-brands fa-linkedin"></i></a></p>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedData = JSON.parse(localStorage.getItem('sessionReportData') || '{}');
+            Object.keys(savedData).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) element.value = savedData[key];
+            });
+        });
+
+        document.getElementById('date').valueAsDate = new Date();
+
+        document.querySelectorAll('input, textarea').forEach(input => {
+            input.addEventListener('change', saveFormData);
+        });
+
+        function saveFormData() {
+            const formData = {};
+            document.querySelectorAll('input, textarea').forEach(el => {
+                formData[el.id] = el.value;
+            });
+            localStorage.setItem('sessionReportData', JSON.stringify(formData));
+        }
+
+        async function generateReport() {
+            const batch = document.getElementById('batch').value;
+            const date = document.getElementById('date').value;
+            const startTime = formatTime(document.getElementById('startTime').value);
+            const endTime = formatTime(document.getElementById('endTime').value);
+            const trainer = document.getElementById('trainer').value;
+            const coordinators = document.getElementById('coordinators').value;
+            const conductedBy = document.getElementById('conductedBy').value;
+            const sessionTopic = document.getElementById('sessionTopic').value;
+
+            try {
+                const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyDDsqGwKoTOFYXCBKaeOjMrcSlrqxQIbPk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: `Generate a detailed session report about: "${sessionTopic}". The report should:
+                                - Describe the session activities and their sequence
+                                - Mention specific exercises or tasks completed
+                                - Include duration of major activities if mentioned
+                                - Explain the learning outcomes
+                                - Keep the tone professional but conversational
+                                - Write in first person plural (we, our)
+                                - Be around 2-3 paragraphs
+                                Format it as a continuous paragraph without headings or bullet points.`
+                            }]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                const reportContent = data.candidates[0].content.parts[0].text;
+
+                const formattedDate = formatDate(date);
+                const reportText = `SESSION REPORT 📄
+——————————
+🏛 Batch: ${batch}
+🗓 Date: ${formattedDate}
+🕒 Time: ${startTime} - ${endTime}
+👤 Trainer: ${trainer}
+👥 Coordinators: ${coordinators}
+📌 Conducted by: ${conductedBy}
+——————————
+Report:
+${reportContent}`;
+
+                document.getElementById('reportPreview').textContent = reportText;
+            } catch (error) {
+                alert('Error generating report. Please try again.');
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-GB').replace(/\//g, '/');
+        }
+
+        function formatTime(timeString) {
+            const [hours, minutes] = timeString.split(':');
+            const period = hours >= 12 ? 'PM' : 'AM';
+            const formattedHours = hours % 12 || 12;
+            return `${formattedHours}:${minutes} ${period}`;
+        }
+
+        function shareOnWhatsApp() {
+            const reportText = document.getElementById('reportPreview').textContent;
+            window.location.href = `whatsapp://send?text=${encodeURIComponent(reportText)}`;
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
